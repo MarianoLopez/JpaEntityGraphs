@@ -10,9 +10,7 @@ import javax.validation.constraints.NotNull
 
 
 @Entity
-@NamedEntityGraphs(
-    NamedEntityGraph(name = "Product.default",attributeNodes = [NamedAttributeNode("provider")])
-)
+@NamedEntityGraphs(NamedEntityGraph(name = "Product.default",attributeNodes = [NamedAttributeNode("provider")]))
 data class Product(
     @Id @GeneratedValue(strategy = GenerationType.AUTO)
     val id:Int? = null,
@@ -20,7 +18,7 @@ data class Product(
     val name:String,
     val price:Double,
     @JsonBackReference //the associated property is part of two-way linkage between fields; and that its role is "child" (or "back") link
-    @ManyToMany(mappedBy = "products")
+    @ManyToMany(mappedBy = "products")//bidirectional relationship
     val tickets:MutableList<Ticket> = mutableListOf(),
     @JsonManagedReference //the annotated property is part of two-way linkage between fields; and that its role is "parent" (or "forward") link
     @ManyToOne(fetch = FetchType.LAZY)
@@ -57,19 +55,21 @@ data class Provider(
     @OneToMany(mappedBy = "provider",fetch = FetchType.LAZY)
     val products: MutableList<Product> = mutableListOf(),
     @JsonManagedReference //the annotated property is part of two-way linkage between fields; and that its role is "parent" (or "forward") link
-    @OneToOne(fetch = FetchType.LAZY,cascade = [CascadeType.ALL],mappedBy = "provider", orphanRemoval = true)
-    var address: Address? = null
+    @OneToOne(fetch = FetchType.LAZY, cascade = [CascadeType.ALL],//the persistence will propagate (cascade) to the relating entities.
+            mappedBy = "provider", orphanRemoval = true
+    ) var address: Address? = null
 )
 
 @Entity
 data class Address(
-        @Id  @GenericGenerator(name = "generator", strategy = "foreign", parameters = [Parameter(name = "property", value = "provider")])//@GeneratedValue(strategy = GenerationType.AUTO)
-        @GeneratedValue(generator = "generator") @Column(name = "provider_id")
+        @Id @Column(name = "provider_id")
+        @GenericGenerator(name = "generator", strategy = "foreign", parameters = [Parameter(name = "property", value = "provider")])//same id as provider.id
+        @GeneratedValue(generator = "generator")
         val id:Int? = null,
         val street:String,
         val city:String,
         @OneToOne(fetch = FetchType.LAZY, optional = false)//optional false enables FK
-        @PrimaryKeyJoinColumn
+        @PrimaryKeyJoinColumn//This annotation specifies a primary key column that is used as a foreign key to join to another table.
         @JsonBackReference //the associated property is part of two-way linkage between fields; and that its role is "child" (or "back") link
         val provider: Provider? = null
-)
+):Auditor()
