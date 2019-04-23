@@ -15,7 +15,7 @@ import org.springframework.boot.runApplication
 @SpringBootApplication
 class H2jpaApplication(private val productRepository: ProductRepository, private val ticketRepository: TicketRepository, private val providerRepository: ProviderRepository):ApplicationRunner {
     override fun run(args: ApplicationArguments?) {
-        populateDB()
+        //populateDB()
 	}
 
     private fun populateDB(){

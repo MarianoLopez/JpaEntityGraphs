@@ -1,6 +1,11 @@
-create table product (id integer IDENTITY, created_date timestamp not null, last_modified_date timestamp not null, name varchar(255) not null, price double not null, primary key (id));
-create table ticket (id integer IDENTITY, created_date timestamp not null, last_modified_date timestamp not null, primary key (id));
-create table ticket_detail (id integer not null, product_id integer not null);
 create sequence hibernate_sequence start with 1 increment by 1;
+create table address (provider_id integer not null, created_date timestamp not null, last_modified_date timestamp not null, city varchar(255), street varchar(255), primary key (provider_id));
+create table product (id integer not null, created_date timestamp not null, last_modified_date timestamp not null, name varchar(255) not null, price double not null, provider_id integer, primary key (id));
+create table provider (id integer not null, name varchar(255), primary key (id));
+create table ticket (id integer not null, created_date timestamp not null, last_modified_date timestamp not null, primary key (id));
+create table ticket_detail (id integer not null, product_id integer not null);
+alter table product add constraint UQ_product_name unique (name);
+alter table address add constraint FK_address_provider foreign key (provider_id) references provider;
+alter table product add constraint FK_product_provider foreign key (provider_id) references provider;
 alter table ticket_detail add constraint FK_ticket_detail_product foreign key (product_id) references product;
 alter table ticket_detail add constraint FK_ticket_detail_ticket foreign key (id) references ticket;
