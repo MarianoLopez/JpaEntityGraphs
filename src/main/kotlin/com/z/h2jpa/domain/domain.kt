@@ -16,7 +16,7 @@ import javax.validation.constraints.Size
 data class Product(
         @Id
         @GeneratedValue(strategy = GenerationType.AUTO) //AUTO = IDENTITY || SEQUENCE. will be defined be the engine
-        val id: Int? = null,
+        var id: Int? = null,
         @ApiModelProperty(example = "Apple")
         @Size(min = 4, max = 250)
         @Column(unique = true, nullable = false)
