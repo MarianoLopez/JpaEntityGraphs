@@ -1,5 +1,6 @@
 package com.z.h2jpa.utils
 
+import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModelProperty
 import org.springframework.data.annotation.CreatedDate
@@ -17,10 +18,12 @@ abstract class Auditor(
         @Column(nullable = false, updatable = false)
         @ApiModelProperty(readOnly = true)
         @get:JsonProperty(access = JsonProperty.Access.READ_ONLY)
+        @get:JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy HH:mm:ss")
         protected var createdDate: LocalDateTime? = null,
         @LastModifiedDate
         @Column(nullable = false)
         @ApiModelProperty(readOnly = true)
         @get:JsonProperty(access = JsonProperty.Access.READ_ONLY)
+        @get:JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy HH:mm:ss")
         protected var lastModifiedDate: LocalDateTime? = null
 )

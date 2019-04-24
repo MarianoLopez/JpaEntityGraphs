@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiOperation
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.web.bind.annotation.*
+import javax.validation.Valid
 
 
 abstract class BasicController<T,ID>(private val basicCrud: BasicCrud<T,ID>) {
@@ -16,11 +17,11 @@ abstract class BasicController<T,ID>(private val basicCrud: BasicCrud<T,ID>) {
 
     @ApiOperation("Insert entity. Throws exception if ID is not null")
     @Throws(Exception::class)
-    @PostMapping fun insert(@RequestBody body:T):T = basicCrud.insert(body)
+    @PostMapping fun insert(@Valid @RequestBody body:T):T = basicCrud.insert(body)
 
     @ApiOperation("Update entity. Throws exception if ID does not exists")
     @Throws(Exception::class)
-    @PutMapping fun update(@RequestBody body:T):T = basicCrud.update(body)
+    @PutMapping fun update(@Valid @RequestBody body:T):T = basicCrud.update(body)
 
     @ApiOperation("Delete entity by ID")
     @DeleteMapping("/{id}") fun deleteById(@PathVariable id:ID) = basicCrud.deleteById(id)
