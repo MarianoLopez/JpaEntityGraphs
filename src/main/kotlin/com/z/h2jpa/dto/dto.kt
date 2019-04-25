@@ -9,3 +9,5 @@ data class ApiResponse(
         @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
         val date: LocalDateTime = LocalDateTime.now(),
         val payload: Any = Any())
+
+data class AttributeError(val field:String, val errors:List<String>)

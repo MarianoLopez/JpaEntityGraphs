@@ -6,7 +6,6 @@ import com.z.h2jpa.utils.Auditor
 import io.swagger.annotations.ApiModelProperty
 import org.hibernate.annotations.GenericGenerator
 import org.hibernate.annotations.Parameter
-import org.hibernate.validator.constraints.Range
 import java.io.Serializable
 import javax.persistence.*
 import javax.validation.constraints.Min
@@ -21,14 +20,14 @@ data class Product(
         @GeneratedValue(strategy = GenerationType.AUTO) //AUTO = IDENTITY || SEQUENCE. will be defined be the engine
         var id: Int? = null,
         @ApiModelProperty(example = "Apple")
-        @Size(min = 4, max = 250)
+        @get:Size(min = 4, max = 250)
         @Column(unique = true, nullable = false)
         val name: String,
         @ApiModelProperty(example = "35.0")
-        @Min(0)
+        @get:Min(0)
         var price: Double,
         @ApiModelProperty(example = "12")
-        @Min(0)
+        @get:Min(0)
         var stock: Int,
         @ApiModelProperty(readOnly = true)//will be omitted at the swagger input
         @JsonBackReference //the associated property is part of two-way linkage between fields; and that its role is "child" (or "back") link
@@ -51,7 +50,9 @@ data class TicketDetail(
         @JoinColumn
         @JsonManagedReference //the annotated property is part of two-way linkage between fields; and that its role is "parent" (or "forward") link
         val product: Product,
+        @get:Min(0)
         val quantity: Int,
+        @get:Min(0)
         val total: Double
 ):Serializable //Entity with composite ID must implements Serializable
 
@@ -74,7 +75,7 @@ data class Ticket(
         @JsonManagedReference //the annotated property is part of two-way linkage between fields; and that its role is "parent" (or "forward") link
         @OneToMany(fetch = FetchType.LAZY, mappedBy = "ticket", cascade = [CascadeType.ALL])
         val detail: MutableList<TicketDetail> = mutableListOf(),
-        //@Min(0L)
+        @get:Min(0)
         var total: Double
 ) : Auditor()
 
@@ -84,7 +85,7 @@ data class Provider(
         @Id @GeneratedValue(strategy = GenerationType.AUTO)
         val id: Int? = null,
         @ApiModelProperty(example = "Mariano")
-        @Size(min = 4, max = 100)
+        @get:Size(min = 4, max = 100)
         val name: String,
         @ApiModelProperty(readOnly = true)//will be omitted at the swagger input
         @JsonBackReference //the associated property is part of two-way linkage between fields; and that its role is "child" (or "back") link
@@ -105,10 +106,10 @@ data class Address(
         @GeneratedValue(generator = "generator")
         val id: Int? = null,
         @ApiModelProperty(example = "Example 123")
-        @Size(min = 4, max = 100)
+        @get:Size(min = 4, max = 100)
         val street: String,
         @ApiModelProperty(example = "Corrientes")
-        @Size(min = 4, max = 100)
+        @get:Size(min = 4, max = 100)
         val city: String,
         @ApiModelProperty(readOnly = true)//will be omitted at the swagger input
         @OneToOne(fetch = FetchType.LAZY, optional = false)//optional false enables FK
