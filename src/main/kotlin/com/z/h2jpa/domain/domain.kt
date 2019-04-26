@@ -14,7 +14,10 @@ import javax.validation.constraints.Size
 
 
 @Entity
-@NamedEntityGraphs(NamedEntityGraph(name = "Product.default", attributeNodes = [NamedAttributeNode("provider")]))
+@NamedEntityGraphs(
+  NamedEntityGraph(
+    name = "Product.default", attributeNodes = [NamedAttributeNode("provider",subgraph = "address")],
+    subgraphs = [NamedSubgraph(name = "address",attributeNodes = [NamedAttributeNode(value = "address")])]))
 data class Product(
         @Id
         @GeneratedValue(strategy = GenerationType.AUTO) //AUTO = IDENTITY || SEQUENCE. will be defined be the engine
@@ -35,7 +38,7 @@ data class Product(
         val ticketDetails: MutableList<TicketDetail> = mutableListOf(),
         @JsonManagedReference //the annotated property is part of two-way linkage between fields; and that its role is "parent" (or "forward") link
         @ManyToOne(fetch = FetchType.LAZY)
-        var provider: Provider? = null
+        var provider: Provider
 ) : Auditor()
 
 @Entity
@@ -83,17 +86,18 @@ data class Ticket(
 @NamedEntityGraphs(NamedEntityGraph(name = "Provider.default", attributeNodes = [NamedAttributeNode("address")]))
 data class Provider(
         @Id @GeneratedValue(strategy = GenerationType.AUTO)
+        @ApiModelProperty(example = "1")
         val id: Int? = null,
         @ApiModelProperty(example = "Mariano")
         @get:Size(min = 4, max = 100)
         val name: String,
         @ApiModelProperty(readOnly = true)//will be omitted at the swagger input
         @JsonBackReference //the associated property is part of two-way linkage between fields; and that its role is "child" (or "back") link
-        @OneToMany(mappedBy = "provider", fetch = FetchType.LAZY)
+        @OneToMany(mappedBy = "provider", fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
         val products: MutableList<Product> = mutableListOf(),
         @NotNull
         @JsonManagedReference //the annotated property is part of two-way linkage between fields; and that its role is "parent" (or "forward") link
-        @OneToOne(fetch = FetchType.LAZY, cascade = [CascadeType.ALL],//the persistence will propagate (cascade) to the relating entities.
+        @OneToOne(fetch = FetchType.LAZY,//the persistence will propagate (cascade) to the relating entities.
                 mappedBy = "provider", orphanRemoval = true
         ) var address: Address? = null //allow null because needs to instance Address first which needs a provider
 )
@@ -115,5 +119,5 @@ data class Address(
         @OneToOne(fetch = FetchType.LAZY, optional = false)//optional false enables FK
         @PrimaryKeyJoinColumn//This annotation specifies a primary key column that is used as a foreign key to join to another table.
         @JsonBackReference //the associated property is part of two-way linkage between fields; and that its role is "child" (or "back") link
-        val provider: Provider? = null
+        var provider: Provider? = null
 ) : Auditor()

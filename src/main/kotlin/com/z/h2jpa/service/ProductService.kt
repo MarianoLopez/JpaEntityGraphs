@@ -14,7 +14,8 @@ class ProductService(private val productRepository: ProductRepository): BasicCru
 
     override fun insert(entity: Product): Product {
         entity.id?.let { throw Exception("Entity must not have ID") }
-        return productRepository.save(entity)
+        productRepository.save(entity)
+        return productRepository.findById(entity.id!!).orElse(null) //if you want to include address info
     }
 
     override fun update(entity: Product): Product {
