@@ -4,61 +4,99 @@ import com.fasterxml.jackson.annotation.JsonBackReference
 import com.fasterxml.jackson.annotation.JsonManagedReference
 import com.z.h2jpa.utils.Auditor
 import io.swagger.annotations.ApiModelProperty
-import org.hibernate.annotations.GenericGenerator
-import org.hibernate.annotations.Parameter
 import java.io.Serializable
 import javax.persistence.*
 import javax.validation.constraints.Min
-import javax.validation.constraints.NotNull
 import javax.validation.constraints.Size
 
 
 @Entity
-@NamedEntityGraphs(
-  NamedEntityGraph(
-    name = "Product.default", attributeNodes = [NamedAttributeNode("provider",subgraph = "address")],
-    subgraphs = [NamedSubgraph(name = "address",attributeNodes = [NamedAttributeNode(value = "address")])]))
 data class Product(
         @Id
-        @GeneratedValue(strategy = GenerationType.AUTO) //AUTO = IDENTITY || SEQUENCE. will be defined be the engine
-        var id: Int? = null,
-        @ApiModelProperty(example = "Apple")
-        @get:Size(min = 4, max = 250)
+        @Column(nullable = false)
+        var id: Int,
+
         @Column(unique = true, nullable = false)
-        val name: String,
-        @ApiModelProperty(example = "35.0")
+        val name:String,
+
         @get:Min(0)
-        var price: Double,
-        @ApiModelProperty(example = "12")
+        var stock: Int = 0,
+
         @get:Min(0)
-        var stock: Int,
-        @ApiModelProperty(readOnly = true)//will be omitted at the swagger input
+        var price: Double = 0.0,
         @JsonBackReference //the associated property is part of two-way linkage between fields; and that its role is "child" (or "back") link
-        @OneToMany(mappedBy = "product")//bidirectional relationship
-        val ticketDetails: MutableList<TicketDetail> = mutableListOf(),
-        @JsonManagedReference //the annotated property is part of two-way linkage between fields; and that its role is "parent" (or "forward") link
-        @ManyToOne(fetch = FetchType.LAZY)
-        var provider: Provider
-) : Auditor()
+        @OneToMany(mappedBy = "product", cascade = [CascadeType.PERSIST])
+        var ticketDetails: MutableList<TicketDetail> = mutableListOf()
+):Auditor()
 
 @Entity
+data class Ticket(
+        @Id
+        @GeneratedValue
+        var id: Int? = 0,
+        @JsonManagedReference //the annotated property is part of two-way linkage between fields; and that its role is "parent" (or "forward") link
+        @OneToMany(mappedBy = "ticket", cascade = [CascadeType.MERGE, CascadeType.PERSIST])
+        val ticketDetails:MutableList<TicketDetail> = mutableListOf(),
+
+        @get:Min(0)
+        var total:Double = 0.0
+):Auditor() {
+    fun addDetail(vararg ticketDetail: TicketDetail) {
+        ticketDetail.forEach {
+            this.accumulateTotal(it)
+            it.updateStock()
+        }
+        this.ticketDetails.addAll(ticketDetail)
+    }
+
+    private fun accumulateTotal(ticketDetail: TicketDetail) {
+        this.total += ticketDetail.quantity * ticketDetail.product.price
+    }
+}
+
+@Entity
+@IdClass(TicketDetailId::class)
 data class TicketDetail(
         @Id
-        @ManyToOne(fetch = FetchType.LAZY)
-        @JoinColumn //indicates that a given column in the owner entity refers to a primary key in the reference entity
+        @JoinColumn(name = "ticket_id", referencedColumnName = "id")
+        @ManyToOne(fetch = FetchType.LAZY, cascade = [CascadeType.MERGE])
         @JsonBackReference //the associated property is part of two-way linkage between fields; and that its role is "child" (or "back") link
-        var ticket: Ticket? = null,
-        @Id
-        @ManyToOne(fetch = FetchType.LAZY)
-        @JoinColumn
-        @JsonManagedReference //the annotated property is part of two-way linkage between fields; and that its role is "parent" (or "forward") link
-        val product: Product,
-        @get:Min(0)
-        val quantity: Int,
-        @get:Min(0)
-        val total: Double
-):Serializable //Entity with composite ID must implements Serializable
+        var ticket: Ticket,
 
+
+        @Id
+        @JoinColumn(name = "product_id", referencedColumnName = "id", insertable = false)
+        @ManyToOne(fetch = FetchType.LAZY, cascade = [CascadeType.MERGE])
+        @JsonManagedReference //the annotated property is part of two-way linkage between fields; and that its role is "parent" (or "forward") link
+        var product: Product,
+
+        @get:Min(1)
+        var quantity: Int = 0
+) {
+    fun updateStock() {
+        this.product.stock = this.product.stock - this.quantity
+    }
+}
+
+class TicketDetailId(var ticket:Int = 0, var product:Int = 0) : Serializable {
+    override fun equals(other: Any?): Boolean {
+        other ?: return false
+        if(this === other) return true
+        if(this.javaClass != other.javaClass) return false
+        other as TicketDetailId
+        return this.ticket == other.ticket && this.product == other.product
+    }
+
+    override fun hashCode(): Int {
+        var result = 7
+        result = 31 * result + ticket.hashCode()
+        result = 31 * result + product.hashCode()
+        return result
+    }
+}
+
+
+/*
 @Entity
 @NamedEntityGraphs(
    NamedEntityGraph(
@@ -70,39 +108,26 @@ data class TicketDetail(
        NamedSubgraph(name = "address", attributeNodes = [NamedAttributeNode("address")])
      ]
    )
-)
-data class Ticket(
-        @ApiModelProperty(readOnly = true)//will be omitted at the swagger input
-        @Id @GeneratedValue(strategy = GenerationType.AUTO)
-        val id: Int? = null,
-        @JsonManagedReference //the annotated property is part of two-way linkage between fields; and that its role is "parent" (or "forward") link
-        @OneToMany(fetch = FetchType.LAZY, mappedBy = "ticket", cascade = [CascadeType.ALL])
-        val detail: MutableList<TicketDetail> = mutableListOf(),
-        @get:Min(0)
-        var total: Double
-) : Auditor()
+)*/
 
 @Entity
-@NamedEntityGraphs(NamedEntityGraph(name = "Provider.default", attributeNodes = [NamedAttributeNode("address")]))
 data class Provider(
-        @Id @GeneratedValue(strategy = GenerationType.AUTO)
+        @Id @GeneratedValue
         @ApiModelProperty(example = "1")
-        val id: Int? = null,
+        val id: Int? = 0,
+
         @ApiModelProperty(example = "Mariano")
+        @Column(nullable = false)
         @get:Size(min = 4, max = 100)
         val name: String,
+
         @ApiModelProperty(readOnly = true)//will be omitted at the swagger input
         @JsonBackReference //the associated property is part of two-way linkage between fields; and that its role is "child" (or "back") link
-        @OneToMany(mappedBy = "provider", fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
-        val products: MutableList<Product> = mutableListOf(),
-        @NotNull
-        @JsonManagedReference //the annotated property is part of two-way linkage between fields; and that its role is "parent" (or "forward") link
-        @OneToOne(fetch = FetchType.LAZY,//the persistence will propagate (cascade) to the relating entities.
-                mappedBy = "provider", orphanRemoval = true
-        ) var address: Address? = null //allow null because needs to instance Address first which needs a provider
+        @OneToMany(mappedBy = "provider", fetch = FetchType.LAZY, cascade = [CascadeType.MERGE])
+        val products: MutableList<Product> = mutableListOf()
 )
 
-@Entity
+/*@Entity
 data class Address(
         @ApiModelProperty(readOnly = true)//will be omitted at the swagger input
         @Id @Column(name = "provider_id")
@@ -120,4 +145,4 @@ data class Address(
         @PrimaryKeyJoinColumn//This annotation specifies a primary key column that is used as a foreign key to join to another table.
         @JsonBackReference //the associated property is part of two-way linkage between fields; and that its role is "child" (or "back") link
         var provider: Provider? = null
-) : Auditor()
+) : Auditor()*/

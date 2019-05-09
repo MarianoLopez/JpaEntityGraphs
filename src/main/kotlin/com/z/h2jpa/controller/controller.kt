@@ -1,10 +1,8 @@
 package com.z.h2jpa.controller
 
 import com.z.h2jpa.domain.Product
-import com.z.h2jpa.domain.Provider
 import com.z.h2jpa.domain.Ticket
 import com.z.h2jpa.service.ProductService
-import com.z.h2jpa.service.ProviderService
 import com.z.h2jpa.service.TicketService
 import io.swagger.annotations.ApiOperation
 import org.springframework.web.bind.annotation.PostMapping
@@ -16,9 +14,9 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/product")
 class ProductController(private val productService: ProductService): BasicController<Product, Int>(productService)
 
-@RestController
+/*@RestController
 @RequestMapping("/provider")
-class ProviderController(private val providerService: ProviderService): BasicController<Provider,Int>(providerService)
+class ProviderController(private val providerService: ProviderService): BasicController<Provider,Int>(providerService)*/
 
 @RestController
 @RequestMapping("/ticket")

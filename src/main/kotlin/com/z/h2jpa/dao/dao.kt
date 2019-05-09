@@ -1,9 +1,7 @@
 package com.z.h2jpa.dao
 
 import com.z.h2jpa.domain.Product
-import com.z.h2jpa.domain.Provider
 import com.z.h2jpa.domain.Ticket
-import org.springframework.context.annotation.Profile
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.EntityGraph
@@ -27,4 +25,4 @@ interface TicketRepository: PagingAndSortingRepository<Ticket, Int>{
     override fun findById(id:Int):Optional<Ticket>
 }
 
-interface ProviderRepository: PagingAndSortingRepository<Provider,Int>
+//interface ProviderRepository: PagingAndSortingRepository<Provider,Int>

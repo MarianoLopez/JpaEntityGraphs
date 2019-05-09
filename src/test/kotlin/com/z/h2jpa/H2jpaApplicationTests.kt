@@ -1,26 +1,19 @@
 package com.z.h2jpa
 
-import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.z.h2jpa.domain.Product
-import com.z.h2jpa.domain.Provider
 import com.z.h2jpa.service.ProductService
-import org.hamcrest.Matcher
-import org.hamcrest.Matchers
-import org.hamcrest.Matchers.*
-import org.junit.Assert
-import org.junit.Assert.*
+import org.hamcrest.Matchers.`is`
+import org.hamcrest.Matchers.notNullValue
+import org.junit.Assert.assertThat
 import org.junit.FixMethodOrder
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.MethodSorters
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.data.domain.Page
-import org.springframework.data.domain.PageRequest
 import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.ResultMatcher
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers
@@ -50,14 +43,14 @@ class H2jpaApplicationTests {
 			andExpect(jsonPath("$.id", `is`(fromDb?.id)))
 			andExpect(jsonPath("$.name", `is`(fromDb?.name)))
 			andExpect(jsonPath("$.price", `is`(fromDb?.price)))
-			andExpect(jsonPath("$.provider.name", `is`(fromDb?.provider?.name)))
+			//andExpect(jsonPath("$.provider.name", `is`(fromDb?.provider?.name)))
 			andExpect(jsonPath("$.ticketDetails").doesNotExist())
 		}
 	}
 
 	@Test
 	fun b_PostProduct(){
-		val product = Product(name = "test", price = 20.0, stock = 5,provider = Provider(id = 1, name = "Mariano"))
+		val product = Product(name = "test", price = 20.0, stock = 5, id = 1) //,provider = Provider(id = 1, name = "Mariano")
 		val json = mock.perform(post("/product").body(product)).apply {
 			andExpect(status().isOk)
 			andExpect(jsonPath("$.id", notNullValue()))

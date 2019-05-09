@@ -1,5 +1,6 @@
 package com.z.h2jpa.service
 
+/*
 import com.z.h2jpa.dao.ProviderRepository
 import com.z.h2jpa.domain.Provider
 import org.springframework.data.domain.Page
@@ -31,4 +32,4 @@ class ProviderService(private val providerRepository: ProviderRepository):BasicC
     }
 
     override fun deleteById(id: Int)  = providerRepository.deleteById(id)
-}
+}*/

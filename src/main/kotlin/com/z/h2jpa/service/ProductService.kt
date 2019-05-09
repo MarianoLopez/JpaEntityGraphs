@@ -12,18 +12,11 @@ class ProductService(private val productRepository: ProductRepository): BasicCru
 
     override fun findById(id: Int): Product? = productRepository.findById(id).orElse(null)
 
-    override fun insert(entity: Product): Product {
-        entity.id?.let { throw Exception("Entity must not have ID") }
-        productRepository.save(entity)
-        return productRepository.findById(entity.id!!).orElse(null) //if you want to include address info
-    }
+    override fun insert(entity: Product): Product = productRepository.save(entity)
 
     override fun update(entity: Product): Product {
-        entity.id?.let {
-            if(!productRepository.existsById(it)) throw Exception("Entity with id: $it does not exists")
-            return productRepository.save(entity)
-        }
-        throw Exception("Entity must have ID")
+        if(!productRepository.existsById(entity.id)) throw Exception("Entity with id: ${entity.id} does not exists")
+        return productRepository.save(entity)
     }
 
     override fun deleteById(id: Int) = productRepository.deleteById(id)

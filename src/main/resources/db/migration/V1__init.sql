@@ -1,11 +1,7 @@
-create sequence hibernate_sequence start with 10 increment by 1;
-create table address (provider_id integer not null, created_date timestamp not null, last_modified_date timestamp not null, city varchar(255), street varchar(255), primary key (provider_id));
-create table product (id integer not null, created_date timestamp not null, last_modified_date timestamp not null, name varchar(255) not null, price double not null, stock INTEGER  NOT  NULL ,provider_id integer, primary key (id));
-create table provider (id integer not null, name varchar(255), primary key (id));
-create table ticket (id integer, created_date timestamp not null, last_modified_date timestamp not null,total DOUBLE NOT NULL , primary key (id));
-create table ticket_detail (ticket_id integer not null, product_id integer not null, quantity INTEGER NOT NULL, total DOUBLE NOT NULL);
-alter table product add constraint UQ_product_name unique (name);
-alter table address add constraint FK_address_provider foreign key (provider_id) references provider;
-alter table product add constraint FK_product_provider foreign key (provider_id) references provider;
-alter table ticket_detail add constraint FK_ticket_detail_product foreign key (product_id) references product;
-alter table ticket_detail add constraint FK_ticket_detail_ticket foreign key (ticket_id) references ticket;
+create sequence hibernate_sequence start with 1 increment by 1;
+create table product (id integer not null, created_date timestamp not null, last_modified_date timestamp not null, name varchar(255) not null, price double not null check (price>=0), stock integer not null check (stock>=0), primary key (id));
+create table ticket (id integer not null, created_date timestamp not null, last_modified_date timestamp not null, total double not null check (total>=0), primary key (id));
+create table ticket_detail (product_id integer not null, ticket_id integer not null, quantity integer not null check (quantity>=1), primary key (product_id, ticket_id));
+alter table product add constraint UK_jmivyxk9rmgysrmsqw15lqr5b unique (name);
+alter table ticket_detail add constraint FKoq8l34egnnenu37sgfnbwb1r4 foreign key (product_id) references product;
+alter table ticket_detail add constraint FKgi0g5nsmkdaoyc25unogm3rry foreign key (ticket_id) references ticket;
