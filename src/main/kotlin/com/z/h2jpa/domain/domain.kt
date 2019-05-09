@@ -11,6 +11,7 @@ import javax.validation.constraints.Size
 
 
 @Entity
+@NamedEntityGraphs(NamedEntityGraph(name = "Product.default", attributeNodes = [NamedAttributeNode("provider")]))
 data class Product(
         @Id
         @Column(nullable = false)
@@ -26,10 +27,24 @@ data class Product(
         var price: Double = 0.0,
         @JsonBackReference //the associated property is part of two-way linkage between fields; and that its role is "child" (or "back") link
         @OneToMany(mappedBy = "product", cascade = [CascadeType.PERSIST])
-        var ticketDetails: MutableList<TicketDetail> = mutableListOf()
+        var ticketDetails: MutableList<TicketDetail> = mutableListOf(),
+
+        @JsonManagedReference //the annotated property is part of two-way linkage between fields; and that its role is "parent" (or "forward") link
+        @ManyToOne(fetch = FetchType.LAZY, cascade = [CascadeType.PERSIST, CascadeType.MERGE])
+        var provider: Provider
 ):Auditor()
 
 @Entity
+@NamedEntityGraphs(
+    NamedEntityGraph(
+        name = "Ticket.default",
+        attributeNodes = [NamedAttributeNode("ticketDetails", subgraph = "ticketDetails")],
+        subgraphs = [
+            NamedSubgraph(name = "ticketDetails",attributeNodes = [NamedAttributeNode("ticket"),NamedAttributeNode("product", subgraph = "provider")]),
+            NamedSubgraph(name = "provider", attributeNodes = [NamedAttributeNode("provider")])
+        ]
+    )
+)
 data class Ticket(
         @Id
         @GeneratedValue
@@ -41,12 +56,15 @@ data class Ticket(
         @get:Min(0)
         var total:Double = 0.0
 ):Auditor() {
-    fun addDetail(vararg ticketDetail: TicketDetail) {
-        ticketDetail.forEach {
-            this.accumulateTotal(it)
+    init {
+        initDetails()
+    }
+    private fun initDetails() {
+        this.ticketDetails.forEach {
+            it.ticket = this //assign current ticket to each detail
+            this.accumulateTotal(it) //accumulate the ticket total
             it.updateStock()
         }
-        this.ticketDetails.addAll(ticketDetail)
     }
 
     private fun accumulateTotal(ticketDetail: TicketDetail) {
@@ -61,7 +79,7 @@ data class TicketDetail(
         @JoinColumn(name = "ticket_id", referencedColumnName = "id")
         @ManyToOne(fetch = FetchType.LAZY, cascade = [CascadeType.MERGE])
         @JsonBackReference //the associated property is part of two-way linkage between fields; and that its role is "child" (or "back") link
-        var ticket: Ticket,
+        var ticket: Ticket? = null,
 
 
         @Id
@@ -95,21 +113,6 @@ class TicketDetailId(var ticket:Int = 0, var product:Int = 0) : Serializable {
     }
 }
 
-
-/*
-@Entity
-@NamedEntityGraphs(
-   NamedEntityGraph(
-     name = "Ticket.default",
-     attributeNodes = [NamedAttributeNode("detail", subgraph = "detail")],
-     subgraphs = [
-       NamedSubgraph(name = "detail",attributeNodes = [NamedAttributeNode("ticket"),NamedAttributeNode("product", subgraph = "provider")]),
-       NamedSubgraph(name = "provider", attributeNodes = [NamedAttributeNode("provider", subgraph = "address")]),
-       NamedSubgraph(name = "address", attributeNodes = [NamedAttributeNode("address")])
-     ]
-   )
-)*/
-
 @Entity
 data class Provider(
         @Id @GeneratedValue
@@ -125,24 +128,4 @@ data class Provider(
         @JsonBackReference //the associated property is part of two-way linkage between fields; and that its role is "child" (or "back") link
         @OneToMany(mappedBy = "provider", fetch = FetchType.LAZY, cascade = [CascadeType.MERGE])
         val products: MutableList<Product> = mutableListOf()
-)
-
-/*@Entity
-data class Address(
-        @ApiModelProperty(readOnly = true)//will be omitted at the swagger input
-        @Id @Column(name = "provider_id")
-        @GenericGenerator(name = "generator", strategy = "foreign", parameters = [Parameter(name = "property", value = "provider")])//same id as provider.id
-        @GeneratedValue(generator = "generator")
-        val id: Int? = null,
-        @ApiModelProperty(example = "Example 123")
-        @get:Size(min = 4, max = 100)
-        val street: String,
-        @ApiModelProperty(example = "Corrientes")
-        @get:Size(min = 4, max = 100)
-        val city: String,
-        @ApiModelProperty(readOnly = true)//will be omitted at the swagger input
-        @OneToOne(fetch = FetchType.LAZY, optional = false)//optional false enables FK
-        @PrimaryKeyJoinColumn//This annotation specifies a primary key column that is used as a foreign key to join to another table.
-        @JsonBackReference //the associated property is part of two-way linkage between fields; and that its role is "child" (or "back") link
-        var provider: Provider? = null
-) : Auditor()*/
+):Auditor()

@@ -2,6 +2,7 @@ package com.z.h2jpa
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.z.h2jpa.domain.Product
+import com.z.h2jpa.domain.Provider
 import com.z.h2jpa.service.ProductService
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.notNullValue
@@ -50,7 +51,7 @@ class H2jpaApplicationTests {
 
 	@Test
 	fun b_PostProduct(){
-		val product = Product(name = "test", price = 20.0, stock = 5, id = 1) //,provider = Provider(id = 1, name = "Mariano")
+		val product = Product(name = "test", price = 20.0, stock = 5, id = 1,provider = Provider(name = "Mariano"))
 		val json = mock.perform(post("/product").body(product)).apply {
 			andExpect(status().isOk)
 			andExpect(jsonPath("$.id", notNullValue()))

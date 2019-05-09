@@ -9,18 +9,24 @@ import org.springframework.boot.ApplicationArguments
 import org.springframework.boot.ApplicationRunner
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
+import org.springframework.transaction.annotation.Transactional
 
 @SpringBootApplication
 class H2jpaApplication(val mapper: ObjectMapper, val productRepository: ProductRepository, val ticketRepository: TicketRepository):ApplicationRunner {
 	override fun run(args: ApplicationArguments?) {
-		val products = productRepository.findAllById(listOf(111,555)).toList()
-		val ticket = Ticket()
+		test()
+	}
 
-		ticket.addDetail(
-				TicketDetail(ticket = ticket, product = products[0], quantity = 1),
-				TicketDetail(ticket = ticket, product = products[1], quantity = 3)
-		)
+	@Transactional
+	fun test() {
+		val products = productRepository.findAllById(listOf(111,555)).toList()
+		val ticket = Ticket(ticketDetails = mutableListOf(
+			TicketDetail(product = products[0], quantity = 1),
+			TicketDetail(product = products[1], quantity = 3)
+		))
+
 		ticketRepository.save(ticket)
+
 		println(mapper.writeValueAsString(ticket))
 	}
 }
